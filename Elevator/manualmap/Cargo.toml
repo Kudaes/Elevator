@@ -1,0 +1,17 @@
+[package]
+name = "manualmap"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.dev.package.manualmap]
+opt-level = 3
+debug = 0
+
+[dependencies]
+bindings = { path = "../bindings" }
+dinvoke = { path = "../dinvoke" }
+data = { path = "../data" }
+litcrypt = "0.3"
+os_info = { version = "3.0", default-features = false }
+winapi = "*"

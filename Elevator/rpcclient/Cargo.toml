@@ -1,0 +1,18 @@
+[package]
+name = "rpcclient"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.dev.package.rpcclient]
+opt-level = 3
+debug = 0
+
+[dependencies]
+litcrypt = "0.3"
+bindings = { path = "../bindings" }
+dinvoke = { path = "../dinvoke" }
+manualmap = { path = "../manualmap" }
+data = { path = "../data" }
+hex = "*"
+winapi = "*"

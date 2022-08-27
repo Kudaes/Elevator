@@ -1,0 +1,16 @@
+[package]
+name = "dinvoke"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.dev.package.dinvoke]
+opt-level = 3
+debug = 0
+
+[dependencies]
+bindings = { path = "../bindings" }
+data = { path = "../data" }
+libc = "0.2.101"
+winproc = "0.6.4"
+litcrypt = "0.3"

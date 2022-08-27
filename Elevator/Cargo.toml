@@ -1,0 +1,11 @@
+[package]
+name = "elevator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rpcclient = { path = "rpcclient" }
+litcrypt = "0.3"
+
+[build-dependencies]
+static_vcruntime = "2.0"
