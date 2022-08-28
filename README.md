@@ -16,7 +16,7 @@ Since we are using [LITCRYPT](https://github.com/anvie/litcrypt.rs) plugin to ob
 
 After that, move into the Elevator folder and simply compile the code:
 
-	C:\Users\User\Desktop\Elevator\Elevator> C:\Users\PcCom\Desktop\Elevator\Elevator\target\release> cargo build --release
+	C:\Users\User\Desktop\Elevator\Elevator> cargo build --release
 	C:\Users\User\Desktop\Elevator\Elevator\target\release> Elevator.exe -h
 
 # Usage
