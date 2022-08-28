@@ -17,12 +17,12 @@ Since we are using [LITCRYPT](https://github.com/anvie/litcrypt.rs) plugin to ob
 After that, move into the Elevator folder and simply compile the code:
 
 	C:\Users\User\Desktop\Elevator\Elevator> cargo build --release
-	C:\Users\User\Desktop\Elevator\Elevator\target\release> Elevator.exe -h
+	C:\Users\User\Desktop\Elevator\Elevator\target\release> elevator.exe -h
 
 # Usage
 
 	USAGE:
-    Elevator.exe <COMMAND> [OPTIONS]
+    elevator.exe <COMMAND> [OPTIONS]
 
 	ARGS:
 	    <COMMAND>                   Command line to run.
@@ -33,8 +33,8 @@ After that, move into the Elevator folder and simply compile the code:
 
 # Examples
 
-	C:\Temp> Elevator.exe c:\windows\system32\cmd.exe --new-console
-	C:\Temp> Elevator.exe "c:\windows\system32\cmd.exe /C whoami /groups > file.txt" --new-console
+	C:\Temp> elevator.exe c:\windows\system32\cmd.exe --new-console
+	C:\Temp> elevator.exe "c:\windows\system32\cmd.exe /C whoami /groups > file.txt" --new-console
 
 # Credits
 * [James Forshaw](https://twitter.com/tiraniddo).
