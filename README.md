@@ -35,6 +35,7 @@ After that, move into the Elevator folder and simply compile the code:
 
 	Elevator.exe c:\windows\system32\cmd.exe --new-console
 
+
 	Elevator.exe "c:\windows\system32\cmd.exe /C whoami /groups > file.txt" --new-console
 
 # Credits
