@@ -12,12 +12,12 @@ Valid only for x64 systems.
 
 Since we are using [LITCRYPT](https://github.com/anvie/litcrypt.rs) plugin to obfuscate string literals, it is required to set up the environment variable LITCRYPT_ENCRYPT_KEY before compiling the code:
 
-	set LITCRYPT_ENCRYPT_KEY="yoursupersecretkey"
+	C:\Users\User\Desktop\Elevator> set LITCRYPT_ENCRYPT_KEY="yoursupersecretkey"
 
 After that, move into the Elevator folder and simply compile the code:
 
-	cargo build --release
-	Elevator.exe -h
+	C:\Users\User\Desktop\Elevator\Elevator> C:\Users\PcCom\Desktop\Elevator\Elevator\target\release> cargo build --release
+	C:\Users\User\Desktop\Elevator\Elevator\target\release> Elevator.exe -h
 
 # Usage
 
