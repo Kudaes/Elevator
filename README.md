@@ -33,11 +33,9 @@ After that, move into the Elevator folder and simply compile the code:
 
 # Examples
 
-	Elevator.exe c:\windows\system32\cmd.exe --new-console
-
-
-	Elevator.exe "c:\windows\system32\cmd.exe /C whoami /groups > file.txt" --new-console
+	C:\Temp> Elevator.exe c:\windows\system32\cmd.exe --new-console
+	C:\Temp> Elevator.exe "c:\windows\system32\cmd.exe /C whoami /groups > file.txt" --new-console
 
 # Credits
-* [James Forshaw](https://twitter.com/tiraniddo)
+* [James Forshaw](https://twitter.com/tiraniddo).
 * [Clément Labro (itm4n)](https://twitter.com/itm4n) for his great posts about RPC.
