@@ -104,7 +104,6 @@ pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
         if rai_launch_admin_process_r.unwrap() != 0
         {
             println!("{}", lc!("[x] RPC call to RAiLaunchAdminProcess failed."));
-            println!("{:x}", rai_launch_admin_process_r.unwrap());
             return false;
         }
 
