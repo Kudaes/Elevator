@@ -19,19 +19,24 @@ fn start() {
         return;
     } 
 
-    let cmd = args[1].to_owned();
-    let mut new_console = false;
+    loop { 
+        let cmd = args[1].to_owned();
+        let mut new_console = false;
 
-    if args.len() > 2 && (args[2] == "-n" || args[2] == lc!("--new-console"))
-    {
-        new_console = true;
+        if args.len() > 2 && (args[2] == "-n" || args[2] == lc!("--new-console"))
+        {
+            new_console = true;
+        }
+
+        if rpcclient::spawn_elevated_process(cmd, new_console)
+        {
+            println!("{}", lc!("[!] Elevated process spawned!"));
+            break;
+        } else {
+            println!("{}", lc!("[X] Trying Again"));
+            continue;
+        }
     }
-
-    if rpcclient::spawn_elevated_process(cmd, new_console)
-    {
-        println!("{}", lc!("[!] Elevated process spawned!"));
-    }
-
 }
 
 pub fn print_help() 
