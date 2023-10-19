@@ -3,10 +3,11 @@ extern crate litcrypt;
 use_litcrypt!();
 
 use std::{ptr, mem::size_of};
-use bindings::Windows::Win32::{System::{ Threading::PROCESS_INFORMATION}, Foundation::{HANDLE, BOOL}};
+
 use data::{APP_STARTUP_INFO, APP_PROCESS_INFORMATION, PVOID, DBGUI_WAIT_STATE_CHANGE, THREAD_ALL_ACCESS, DbguiCreateProcess, STARTUPINFOEXW,
     PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, EXTENDED_STARTUPINFO_PRESENT, CREATE_UNICODE_ENVIRONMENT, DEBUG_PROCESS, PROCESS_DEBUG_OBJECT_HANDLE, CREATE_NEW_CONSOLE};
-use winapi::um::winnt::{LARGE_INTEGER};
+use winapi::um::winnt::LARGE_INTEGER;
+use windows::Win32::{Foundation::{HANDLE, BOOL}, System::Threading::PROCESS_INFORMATION};
 
 
 pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
@@ -193,7 +194,7 @@ pub fn spawn_elevated_process(command: String, new_console: bool) -> bool
         dinvoke::dynamic_invoke!(k32,&lc!("InitializeProcThreadAttributeList"),initialize_attribute_list,_initialize_attribute_list_r,ptr::null_mut(),1,0,size);
         let startup = vec![0u8;size_of::<STARTUPINFOEXW>()];
         let list = vec![0u8;*size];
-        let mut startupinfoex: *mut STARTUPINFOEXW = std::mem::transmute(startup.as_ptr());
+        let startupinfoex: *mut STARTUPINFOEXW = std::mem::transmute(startup.as_ptr());
         (*startupinfoex).lpAttributeList = std::mem::transmute(list.as_ptr());
         let initialize_attribute_list: data::InitializeProcThreadAttributeList;
         let initialize_attribute_list_r: Option<BOOL>;

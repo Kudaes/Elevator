@@ -1,9 +1,13 @@
-use std::{ffi::c_void, ptr};
-use bindings::Windows::Win32::{Foundation::{BOOL, HANDLE, HINSTANCE, PSTR, PWSTR}, Security::SECURITY_ATTRIBUTES, System::{Diagnostics::Debug::{IMAGE_DATA_DIRECTORY, IMAGE_OPTIONAL_HEADER32, IMAGE_SECTION_HEADER, EXCEPTION_RECORD}, SystemServices::{OVERLAPPED}, Kernel::UNICODE_STRING, WindowsProgramming::{OBJECT_ATTRIBUTES, IO_STATUS_BLOCK}, Rpc::{MIDL_STUBLESS_PROXY_INFO, CLIENT_CALL_RETURN}, Threading::PROCESS_INFORMATION}};
-use winapi::shared::ntdef::LARGE_INTEGER;
+use std::{ffi::c_void, ptr, collections::BTreeMap};
+use windows::{Win32::{Foundation::{BOOL, HANDLE, HINSTANCE, UNICODE_STRING}, Security::SECURITY_ATTRIBUTES, System::{Diagnostics::Debug::{IMAGE_DATA_DIRECTORY, IMAGE_OPTIONAL_HEADER32, IMAGE_SECTION_HEADER, EXCEPTION_RECORD}, IO::{OVERLAPPED,IO_STATUS_BLOCK}}}, core::PWSTR};
+use windows::core::PSTR;
+use windows::Wdk::Foundation::OBJECT_ATTRIBUTES;use winapi::shared::ntdef::LARGE_INTEGER;
+use windows::Win32::System::Threading::PROCESS_INFORMATION;
+use windows::Win32::System::Rpc::{MIDL_STUBLESS_PROXY_INFO, CLIENT_CALL_RETURN};
 
 pub type PVOID = *mut c_void;
 pub type DWORD = u32;
+pub type EAT = BTreeMap<isize,String>;
 pub type EntryPoint =  extern "system" fn (HINSTANCE, u32, *mut c_void) -> BOOL;
 pub type LoadLibraryA = unsafe extern "system" fn (PSTR) -> HINSTANCE;
 pub type OpenProcess = unsafe extern "system" fn (u32, i32, u32) -> HANDLE;
@@ -11,6 +15,7 @@ pub type CreateFileA = unsafe extern "system" fn (*mut u8, u32, u32, *const SECU
 pub type ReadFile = unsafe extern "system" fn (HANDLE, PVOID, u32, *mut u32, *mut OVERLAPPED) -> i32; 
 pub type CreateProcessW = unsafe extern "system" fn (*const u16, *mut u16, *const SECURITY_ATTRIBUTES, *const SECURITY_ATTRIBUTES, BOOL, u32, *const c_void,
     *const u16, *const STARTUPINFOEXW, *mut PROCESS_INFORMATION) -> BOOL;
+pub type VirtualFree = unsafe extern "system" fn (PVOID, usize, u32) -> bool;
 pub type GetLastError = unsafe extern "system" fn () -> u32;
 pub type CloseHandle = unsafe extern "system" fn (HANDLE) -> i32;
 pub type LptopLevelExceptionFilter = usize;
@@ -18,6 +23,7 @@ pub type InitializeProcThreadAttributeList = unsafe extern "system" fn (PVOID, u
 pub type UpdateProcThreadAttribute = unsafe extern "system" fn (PVOID, u32, usize, *const c_void, usize, PVOID, *const usize) -> BOOL;
 pub type SetUnhandledExceptionFilter = unsafe extern "system" fn (filter: LptopLevelExceptionFilter) -> LptopLevelExceptionFilter;
 pub type LdrGetProcedureAddress = unsafe extern "system" fn (PVOID, *mut String, u32, *mut PVOID) -> i32;
+pub type RtlAddFunctionTable = unsafe extern "system" fn (usize, i32, isize) -> bool;
 pub type NtWriteVirtualMemory = unsafe extern "system" fn (HANDLE, PVOID, PVOID, usize, *mut usize) -> i32;
 pub type NtProtectVirtualMemory = unsafe extern "system" fn (HANDLE, *mut PVOID, *mut usize, u32, *mut u32) -> i32;
 pub type NtAllocateVirtualMemory = unsafe extern "system" fn (HANDLE, *mut PVOID, usize, *mut usize, u32, u32) -> i32;
@@ -39,6 +45,7 @@ pub type RpcStringBindingCompose = unsafe extern "system" fn (*const u16, *const
 pub type RpcBindingFromStringBinding = unsafe extern "system" fn (*const u16, *mut *mut c_void) -> i32;
 pub type RpcStringFree = unsafe extern "system" fn (*mut *mut u16) -> i32; 
 pub type RAiLaunchAdminProcess = unsafe extern "system" fn (*mut *mut c_void, *mut u16, *mut u16, i32, i32, *mut u16, *mut u16, *mut APP_STARTUP_INFO, isize, i32, *mut APP_PROCESS_INFORMATION, *mut i32) -> i32;
+pub type RtlQueueWorkItem = unsafe extern "system" fn (usize, PVOID, u32) -> i32;
 
 pub const DLL_PROCESS_DETACH: u32 = 0;
 pub const DLL_PROCESS_ATTACH: u32 = 1;
@@ -181,7 +188,7 @@ impl Default for PeMetadata {
 #[repr(C)]
 pub struct PeManualMap {
     pub decoy_module: String,
-    pub base_address: i64,
+    pub base_address: isize,
     pub pe_info: PeMetadata,
 }
 
@@ -525,4 +532,12 @@ pub enum ExceptionHandleFunction
     NtWriteVirtualMemory,
     NtProtectVirtualMemory,
     NtCreateThreadEx
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+pub struct RUNTIME_FUNCTION {
+    pub begin_addr: u32,
+    pub end_addr: u32,
+    pub unwind_addr: u32
 }

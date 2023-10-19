@@ -1,0 +1,1 @@
+rustflags = ["--remap-path-prefix", "C:\\Users\\=B"] # A = prefix path to remove, probably the same value as the %USERPROFILE% env variable ; B = new value, it can be left empty
